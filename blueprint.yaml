@@ -1,0 +1,56 @@
+# Version History
+# 2022-10-13: Initial version
+# 2022-10-19: Added condition to brightness control to make sure light is already on. Prevents light turning on after every HA restart.
+alias: Bedroom Button
+description: Bedroom Button
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.bedroom_button_action
+    attribute: brightness
+    id: brightness
+  - platform: state
+    entity_id:
+      - sensor.bedroom_button_action
+    to: "on"
+    id: "on"
+  - platform: state
+    entity_id:
+      - sensor.bedroom_button_action
+    to: "off"
+    id: "off"
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "on"
+        sequence:
+          - service: light.toggle
+            data: {}
+            target:
+              entity_id: light.bedroom_light
+      - conditions:
+          - condition: trigger
+            id: "off"
+        sequence:
+          - service: light.toggle
+            data:
+              color_temp: 352
+            target:
+              entity_id: light.bedside_light
+      - conditions:
+          - condition: trigger
+            id: brightness
+          - condition: state
+            entity_id: light.bedside_light
+            state: "on"
+        sequence:
+          - service: light.turn_on
+            data:
+              brightness: >-
+                {{ state_attr('sensor.bedroom_button_action','brightness') }}
+              transition: 0.4
+            target:
+              entity_id: light.bedside_light
+mode: single
